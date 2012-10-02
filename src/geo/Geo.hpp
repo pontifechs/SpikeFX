@@ -2,25 +2,22 @@
 #ifndef __GUARD_GEO_HPP__
 #define __GUARD_GEO_HPP__
 
-#include "tex/Texture.hpp"
-#include "tex/TexMgr.hpp"
-
 #include "math/Vector.hpp"
+#include "tex/TexStack.hpp"
 
 
+class TexIF;
 
 /// Provides an abstract base class which all geometry inherits from. 
-class Geo 
+class Geo
 {
 public:
 
   Geo();
   virtual void Draw() const = 0;
 
-  void RegisterTex(Texture* tex);
-  
-  void RegisterTex1(Texture* tex);
-  void RegisterTex2(Texture* tex);
+  void PushTex(TexIF* tex);
+  void ClearTexes();
 
   void SetTranslate(Vector trans);
   void SetScale(Vector scale);
@@ -30,18 +27,17 @@ public:
   Vector GetCenter() const;
 
 protected:
-  Texture* m_pTex1;
-  Texture* m_pTex2;
-  
   Vector m_trans;
   Vector m_scale;
 
   float* m_rotation;
 
   Vector m_center;
-  
-private:
 
+  // Texture members
+  TexStack m_texStack;
+
+private:
 
     
 };

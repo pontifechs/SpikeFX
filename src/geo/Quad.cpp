@@ -1,3 +1,13 @@
+// Libs
+#ifdef __APPLE__ 
+  #include <OpenGL/gl.h>
+  #include <GLUT/glut.h>
+#else
+  #include <GL/gl.h>
+  #include <GL/glut.h>
+#endif
+
+
 
 #include "geo/Quad.hpp"
 
@@ -124,15 +134,6 @@ void Quad::Draw() const
   // Translate to Center
   glTranslatef(-m_center.x(), -m_center.y(), -m_center.z());
 
-  if (m_pTex1 != NULL)
-  {
-    m_pTex1->PrepareTexture();
-  }
-  if (m_pTex2 != NULL)
-  {
-    m_pTex2->PrepareTexture();  
-  }
-
   glBegin(GL_QUADS);
   
   glColor4f(m_col1.r(), m_col1.g(), m_col1.b(), m_col1.a());
@@ -164,16 +165,6 @@ void Quad::Draw() const
   glVertex3f(m_pt4.x(), m_pt4.y(), m_pt4.z());
 
   glEnd();
-
-
-  if (m_pTex1 != NULL)
-  {
-    m_pTex1->DisableTexture();
-  }
-  if (m_pTex2 != NULL)
-  {
-    m_pTex2->DisableTexture();  
-  }
 
   glPopMatrix();
 }

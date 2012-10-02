@@ -1,3 +1,14 @@
+
+// Libs
+#ifdef __APPLE__ 
+  #include <OpenGL/gl.h>
+  #include <GLUT/glut.h>
+#else
+  #include <GL/gl.h>
+  #include <GL/glut.h>
+#endif
+
+
 #include <cmath>
 
 #include "geo/Sphere.hpp"
@@ -84,18 +95,15 @@ void Sphere::Generate(Vector center, float radius, float ang_inc)
       Triangle t1(pt1, pt2, pt3, SOLID_WHITE);
       Triangle t2(pt1, pt3, pt4, SOLID_WHITE);
 
-
       t1.SetNormals(norm1, norm2, norm3);
-      t1.RegisterTex1(m_pTex1);
-      t1.RegisterTex2(m_pTex2);
-      t1.SetTex1Coords(tex1, tex2, tex3);
-      t1.SetTex2Coords(tex1, tex2, tex3);
-
       t2.SetNormals(norm1, norm3, norm4);
-      t2.RegisterTex1(m_pTex1);
-      t2.RegisterTex2(m_pTex2);
-      t2.SetTex1Coords(tex1, tex3, tex4);
-      t2.SetTex2Coords(tex1, tex3, tex4);
+      
+      t1.PushTexCoords(tex1, tex2, tex3);
+      t2.PushTexCoords(tex1, tex3, tex4);
+      t1.PushTexCoords(tex1, tex2, tex3);
+      t2.PushTexCoords(tex1, tex3, tex4);
+      t1.PushTexCoords(tex1, tex2, tex3);
+      t2.PushTexCoords(tex1, tex3, tex4);
 
       tris.push_back(t1);
       tris.push_back(t2);     
@@ -125,10 +133,14 @@ void Sphere::Draw() const
   // Translate to Center
   glTranslatef(-m_center.x(), -m_center.y(), -m_center.z());
 
+  m_texStack.EnableTexStack();
+
   for (int i = 0; i < tris.size(); i++)
   {    
     tris[i].Draw();
   }
+
+  m_texStack.DisableTexStack();
 
   glPopMatrix();
 }

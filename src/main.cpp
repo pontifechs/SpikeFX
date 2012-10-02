@@ -22,7 +22,8 @@
 #include "math/Vector.hpp"
 #include "math/Color.hpp"
 
-#include "tex/Texture.hpp"
+#include "tex/BaseTex.hpp"
+#include "tex/MultiTex.hpp"
 
 int main_window;
 int glu_window;
@@ -34,15 +35,11 @@ float eye[3];
 float lookat[3];
 
 
-Texture* earthTex;
-Texture* faceTex;
-Texture* checkerTex;
-Texture* brickTex;
-Texture* lightTex;
+BaseTex* earthTex;
+MultiTex* faceTex;
+MultiTex* lightTex;
 
 Sphere* earth;
-Box* box;
-
 
 // GLUI Objects
 GLUI *glui;
@@ -117,25 +114,16 @@ static void display(void)
       live_face_alpha = 0;
     }
   }
-  
-  faceTex->SetAlpha(live_face_alpha);
+
+  faceTex->SetAlpha(0.5);
+  lightTex->SetAlpha(0.5);
 
   earth->SetRotate(live_object_rotation);
-  box->SetRotate(live_object_rotation);
 
   Vector translate(live_object_xz_trans[0], 
 		   live_object_y_trans,
     		   -live_object_xz_trans[1]);
   earth->SetTranslate(translate);
-  box->SetTranslate(translate);
-
-  if (live_draw_lightmap)
-  {
-    lightTex->SetAlpha(0.75);
-  }
-  else {
-    lightTex->SetAlpha(0.0);
-  }
 
   scene.DrawScene();
 
@@ -259,17 +247,13 @@ void GLUIInit(void)
 
   spin_s->set_float_limits(0.1, 10.0);
 
-
-  glui->set_main_gfx_window(main_window);
-
   glui->add_checkbox("Draw Light Mapped Floor", 
 		     &live_draw_lightmap, 
 		     CB_TOGGLE_LIGHTMAP, 
 		     glui_cb);
 
+
   glui->set_main_gfx_window(main_window);
-
-
 }
 
 // mouse handling functions for the main window
@@ -443,15 +427,11 @@ void myGlutMotion(int x, int y)
     break;
   }
 
-
   last_x = x;
   last_y = y;
 
   glutPostRedisplay();
 }
-
-
-
 
 void initGeometry()
 {
@@ -473,84 +453,23 @@ void initGeometry()
   live_face_alpha = 0;
 
 
-  earthTex = new Texture("../tex/eoe4.rgb", 1.0, GL_MODULATE, false, GL_TEXTURE0);
-  faceTex = new Texture("../tex/mdudley.rgb", live_face_alpha, GL_MODULATE, false,  GL_TEXTURE1);
-  checkerTex = new Texture("../tex/checkerboard.rgb", 1.0, GL_MODULATE, true, GL_TEXTURE0);
-  brickTex = new Texture("../tex/brick.rgb", 1.0, GL_MODULATE, true, GL_TEXTURE0); 
-  lightTex = new Texture("../tex/lightmap.rgb", 0.7, GL_MODULATE, false, GL_TEXTURE1);
-  
+  earthTex = new BaseTex("../tex/eoe4.rgb", GL_MODULATE, false);
+  faceTex = new MultiTex("../tex/mdudley.rgb", live_face_alpha, false);
+  lightTex = new MultiTex("../tex/lightmap.rgb", 0.5, false);
+
   Vector light_pos(5.0, 5.0, 5.0);
   Color light_color = SOLID_WHITE;
   Light l(light_pos, light_color, GL_LIGHT0);
   scene.AddLight(l);
 
-  Vector cent(0.0, 2.0, 0.0);
+  Vector cent(0.0, 0.0, 0.0);
   earth = new Sphere();
-  earth->RegisterTex1(earthTex);
-  earth->RegisterTex2(faceTex);
-  earth->Generate(cent, 2.0, 5);
+  earth->PushTex(earthTex);
+  earth->PushTex(faceTex);
+  earth->PushTex(lightTex);
+  earth->Generate(cent, 8.0, 5);
   scene.AddGeometry(earth);
 
-
-
-  Vector fpt1(-10.0, -4.0, -10.0);
-  Vector fpt2(-10.0, -4.0,  10.0);
-  Vector fpt3(10.0, -4.0, 10.0);
-  Vector fpt4(10.0, -4.0, -10.0);
-  Vector fnorm(0.0, 1.0, 0.0);
-  Vector ftex1(-1.0, -1.0, 0.0);
-  Vector ftex2(-1.0, 1.0, 0.0);
-  Vector ftex3(1.0, 1.0, 0.0);
-  Vector ftex4(1.0, -1.0, 0.0);
-  Quad* floor = new Quad(fpt1, fpt2, fpt3, fpt4, SOLID_WHITE);
-  floor->SetNormals(fnorm, fnorm, fnorm, fnorm);
-  floor->RegisterTex1(checkerTex);
-  floor->RegisterTex2(lightTex);
-  floor->SetTex1Coords(ftex1, ftex2, ftex3, ftex4);
-  floor->SetTex2Coords(ftex1, ftex2, ftex3, ftex4);
-  scene.AddGeometry(floor); 
-
-  Vector lwallpt1(-10.0, -4.0, -10.0);
-  Vector lwallpt2(-10.0, 10.0, -10.0);
-  Vector lwallpt3(-10.0, 10.0, 10.0);
-  Vector lwallpt4(-10.0, -4.0, 10.0);
-  Vector lwallnorm(1.0, 0.0, 0.0);
-  Quad* lwall = new Quad(lwallpt1, lwallpt2, lwallpt3, lwallpt4, SOLID_WHITE);
-  lwall->SetNormals(lwallnorm, lwallnorm, lwallnorm, lwallnorm);
-  lwall->RegisterTex1(brickTex);
-  lwall->SetTex1Coords(ftex1, ftex2, ftex3, ftex4);
-  scene.AddGeometry(lwall);
-
-  
-  Vector rwallpt1(10.0, -4.0, -10.0);
-  Vector rwallpt2(10.0, 10.0, -10.0);
-  Vector rwallpt3(10.0, 10.0, 10.0);
-  Vector rwallpt4(10.0, -4.0, 10.0);
-  Vector rwallnorm(1.0, 0.0, 0.0);
-  Quad* rwall = new Quad(rwallpt1, rwallpt2, rwallpt3, rwallpt4, SOLID_WHITE);
-  rwall->SetNormals(rwallnorm, rwallnorm, rwallnorm, rwallnorm);
-  rwall->RegisterTex1(brickTex);
-  rwall->SetTex1Coords(ftex1, ftex2, ftex3, ftex4);
-  scene.AddGeometry(rwall);
-
-  
-  Vector bwallpt1(-10.0, -4.0, -10.0);
-  Vector bwallpt2(-10.0, 10.0, -10.0);
-  Vector bwallpt3(10.0, 10.0, -10.0);
-  Vector bwallpt4(10.0, -4.0, -10.0);
-  Vector bwallnorm(0.0, 0.0, 1.0);
-  Quad* bwall = new Quad(bwallpt1, bwallpt2, bwallpt3, bwallpt4, SOLID_WHITE);
-  bwall->SetNormals(bwallnorm, bwallnorm, bwallnorm, bwallnorm);
-  bwall->RegisterTex1(brickTex);
-  bwall->SetTex1Coords(ftex1, ftex2, ftex3, ftex4);
-  scene.AddGeometry(bwall);
-
-
-  Vector boxCent(0.0, -2.0, 0.0);
-  box = new Box(boxCent, 2, 2, 2);
-  box->SetColor(SOLID_DARK_RED);
-  box->SetCenter(cent);
-  scene.AddGeometry(box);
 
 }
 
@@ -564,17 +483,28 @@ void myGlutIdle(void)
   glutPostRedisplay();
 }
 
+// the window has changed shapes, fix ourselves up
+void myGlutReshape(int	x, int y)
+{
+  int tx, ty, tw, th;
+  GLUI_Master.get_viewport_area(&tx, &ty, &tw, &th);
+  glViewport(tx, ty, tw, th);
+
+  glutPostRedisplay();
+}
+
 int main(int argc, char* argv[])
 {
   
   // Initialize the Window
   glutInit(&argc, argv);
   glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );  
-  glutInitWindowSize(700,700);
+  glutInitWindowSize(1000,700);
   main_window = glutCreateWindow("Spike");  
 
   // Set up GLUT/GLUI callbacks
   glutDisplayFunc(&display);
+  GLUI_Master.set_glutReshapeFunc(myGlutReshape);
   GLUI_Master.set_glutMouseFunc(myGlutMouse);
   GLUI_Master.set_glutIdleFunc(myGlutIdle);
   glutMotionFunc(myGlutMotion);

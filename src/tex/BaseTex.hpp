@@ -12,24 +12,21 @@
   #include <GL/gl.h>
   #include <GL/glut.h>
 #endif
-#include <stdio.h>
 
+#include <stdio.h>
 #include <string>
 
 #include "math/Vector.hpp"
+#include "tex/TexIF.hpp"
 
-class Texture
+class BaseTex : public TexIF
 {
 public:
-  Texture(std::string filename, float alpha, GLint mode, 
-	  bool repeat, GLenum target = GL_TEXTURE0); 
+  BaseTex(std::string filename,  GLint mode, bool repeat); 
   
-  void PrepareTexture() const;
-  void DisableTexture() const;
+  void EnableTex() const;
+  void DisableTex() const;
 
-  void SetAlpha(float alpha);
-  float GetAlpha() const;
-  
   void SetMode(GLint m_mode);
   GLint GetMode() const;
 
@@ -40,13 +37,10 @@ public:
 
 protected:
 private:
-  GLenum m_target;
-  GLuint m_texId;
   GLint  m_mode;
   
   std::string m_handle;
   
-  float m_alpha;
 
   Vector m_trans;
   Vector m_scale;

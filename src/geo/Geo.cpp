@@ -1,31 +1,23 @@
 
 
-
 #include "geo/Geo.hpp"
-
+#include "tex/TexIF.hpp"
 
 Geo::Geo()
-  : m_pTex1(NULL),
-    m_pTex2(NULL),
-    m_trans(0.0, 0.0, 0.0),
+  : m_trans(0.0, 0.0, 0.0),
     m_scale(1.0, 1.0, 1.0),
     m_rotation(NULL)
 {
 }
 
-void Geo::RegisterTex(Texture* tex)
+void Geo::PushTex(TexIF* tex)
 {
-  RegisterTex1(tex);
+  m_texStack.PushTex(tex);
 }
 
-void Geo::RegisterTex1(Texture* tex)
+void Geo::ClearTexes()
 {
-  m_pTex1 = tex; 
-}
-
-void Geo::RegisterTex2(Texture* tex)
-{
-  m_pTex2 = tex;
+  
 }
 
 void Geo::SetTranslate(Vector trans)

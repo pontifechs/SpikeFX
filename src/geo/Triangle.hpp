@@ -8,7 +8,6 @@
 
 #include "math/Vector.hpp"
 #include "math/Color.hpp"
-#include "tex/Texture.hpp"
 
 class Triangle : public Geo 
 {
@@ -22,10 +21,8 @@ public:
   Triangle(Vector pt1, Vector pt2, Vector pt3, 
 	   Color col1, Color col2, Color col3);
 
-  void SetTexCoords(Vector pt1, Vector pt2, Vector pt3);
-
-  void SetTex1Coords(Vector pt1, Vector pt2, Vector pt3);
-  void SetTex2Coords(Vector pt1, Vector pt2, Vector pt3);
+  void PushTexCoords(Vector pt1, Vector pt2, Vector pt3);
+  void ClearTexCoords();
 
   void SetNormals(Vector norm1, Vector norm2, Vector norm3);
 
@@ -46,17 +43,13 @@ private:
   Vector m_norm2;
   Vector m_norm3;
 
-  Vector m_pt1_tex1;
-  Vector m_pt2_tex1;
-  Vector m_pt3_tex1;
-
-  Vector m_pt1_tex2;
-  Vector m_pt2_tex2;
-  Vector m_pt3_tex2;
-
   Color m_col1;
   Color m_col2;
   Color m_col3;
+
+  std::vector<Vector> m_tex1_stack;
+  std::vector<Vector> m_tex2_stack;
+  std::vector<Vector> m_tex3_stack;
 
 };
 
