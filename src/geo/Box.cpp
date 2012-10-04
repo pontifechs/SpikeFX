@@ -162,89 +162,15 @@ Color Box::GetColor(Face face) const
 }
 
 
-void Box::SetTex1Coords(Vector pt1, Vector pt2, Vector pt3, Vector pt4, Face f)
+void Box::Draw(TexStack* override) const
 {
-  switch(f)
+  TexStack texStack = m_texStack;
+  if (override != NULL)
   {
-  case TOP:
-    m_top.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case BOTTOM:
-    m_bot.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case LEFT:
-    m_left.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case RIGHT:
-    m_right.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case NEAR:
-    m_near.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case FAR:
-    m_far.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case ALL:    
-    m_top.SetTex1Coords(pt1, pt2, pt3, pt4);
-    m_bot.SetTex1Coords(pt1, pt2, pt3, pt4);
-    m_left.SetTex1Coords(pt1, pt2, pt3, pt4);
-    m_right.SetTex1Coords(pt1, pt2, pt3, pt4);
-    m_near.SetTex1Coords(pt1, pt2, pt3, pt4);
-    m_far.SetTex1Coords(pt1, pt2, pt3, pt4);
-    break;
+    texStack = *override;
   }
-}
 
 
-
-void Box::SetTex2Coords(Vector pt1, Vector pt2, Vector pt3, Vector pt4, Face f)
-{
-  switch(f)
-  {
-  case TOP:
-    m_top.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case BOTTOM:
-    m_bot.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case LEFT:
-    m_left.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case RIGHT:
-    m_right.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case NEAR:
-    m_near.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case FAR:
-    m_far.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-
-  case ALL:    
-    m_top.SetTex2Coords(pt1, pt2, pt3, pt4);
-    m_bot.SetTex2Coords(pt1, pt2, pt3, pt4);
-    m_left.SetTex2Coords(pt1, pt2, pt3, pt4);
-    m_right.SetTex2Coords(pt1, pt2, pt3, pt4);
-    m_near.SetTex2Coords(pt1, pt2, pt3, pt4);
-    m_far.SetTex2Coords(pt1, pt2, pt3, pt4);
-    break;
-  }
-}
-
-
-void Box::Draw() const
-{
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 
@@ -261,12 +187,12 @@ void Box::Draw() const
   glTranslatef(-m_center.x(), -m_center.y(), -m_center.z());
 
 
-  m_top.Draw();
-  m_bot.Draw();
-  m_left.Draw();
-  m_right.Draw();
-  m_near.Draw();
-  m_far.Draw();
+  m_top.Draw(&texStack);
+  m_bot.Draw(&texStack);
+  m_left.Draw(&texStack);
+  m_right.Draw(&texStack);
+  m_near.Draw(&texStack);
+  m_far.Draw(&texStack);
 
   glPopMatrix();
 }

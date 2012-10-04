@@ -32,11 +32,7 @@ public:
   void SetColor(Color col, Face face = ALL);
   Color GetColor(Face face) const;
 
-  void SetTex1Coords(Vector pt1, Vector pt2, Vector pt3, Vector pt4, Face f = ALL); 
-  void SetTex2Coords(Vector pt1, Vector pt2, Vector pt3, Vector pt4, Face f = ALL); 
-  
-
-  virtual void Draw() const;
+  virtual void Draw(TexStack* override) const;
 
 protected:
 private:

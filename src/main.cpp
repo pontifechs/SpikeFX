@@ -40,6 +40,8 @@ MultiTex* faceTex;
 MultiTex* lightTex;
 
 Sphere* earth;
+Box* box;
+
 
 // GLUI Objects
 GLUI *glui;
@@ -118,12 +120,12 @@ static void display(void)
   faceTex->SetAlpha(0.5);
   lightTex->SetAlpha(0.5);
 
-  earth->SetRotate(live_object_rotation);
+//  earth->SetRotate(live_object_rotation);
 
   Vector translate(live_object_xz_trans[0], 
 		   live_object_y_trans,
     		   -live_object_xz_trans[1]);
-  earth->SetTranslate(translate);
+//  earth->SetTranslate(translate);
 
   scene.DrawScene();
 
@@ -444,10 +446,9 @@ void initGeometry()
 
   Vector up(0.0, 1.0, 0.0);
   scene.SetUp(up);
-
   scene.SetFrustum(-1, 1, -1, 1, 1, 1000);
   
-  Color ambLight(0.2, 0.2, 0.2, 1.0);
+  Color ambLight(1.0, 1.0, 1.0, 1.0);
   scene.SetAmbient(ambLight);
   
   live_face_alpha = 0;
@@ -470,6 +471,10 @@ void initGeometry()
   earth->Generate(cent, 8.0, 5);
   scene.AddGeometry(earth);
 
+  // box = new Box(cent, 2, 2, 2);
+  // box->SetColor(SOLID_DARK_RED);
+  // scene.AddGeometry(box);
+  
 
 }
 

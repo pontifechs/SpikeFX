@@ -25,7 +25,7 @@ public:
 
   void SetNormals(Vector norm1, Vector norm2, Vector norm3, Vector norm4);
   
-  virtual void Draw() const;
+  virtual void Draw(TexStack* override=0) const;
 
 protected:
 private:

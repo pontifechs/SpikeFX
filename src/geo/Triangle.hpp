@@ -30,7 +30,7 @@ public:
   Vector pt2() const;
   Vector pt3() const;
 
-  virtual void Draw() const;
+  virtual void Draw(TexStack* override=0) const;
 
 protected:
 private:

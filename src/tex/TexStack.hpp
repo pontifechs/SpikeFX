@@ -17,6 +17,7 @@ public:
   void PushTex(TexIF* tex);
   void ClearTexes();
 
+  int TexCount() const;
   
 protected:
 private:

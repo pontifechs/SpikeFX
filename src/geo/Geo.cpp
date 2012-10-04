@@ -17,7 +17,7 @@ void Geo::PushTex(TexIF* tex)
 
 void Geo::ClearTexes()
 {
-  
+  m_texStack.ClearTexes();
 }
 
 void Geo::SetTranslate(Vector trans)

@@ -34,3 +34,8 @@ void TexStack::ClearTexes()
 {
   m_stack.clear();
 }
+
+int TexStack::TexCount() const
+{
+  return m_stack.size();
+}

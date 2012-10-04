@@ -12,9 +12,8 @@ class TexIF;
 class Geo
 {
 public:
-
   Geo();
-  virtual void Draw() const = 0;
+  virtual void Draw(TexStack* override=0) const = 0;
 
   void PushTex(TexIF* tex);
   void ClearTexes();

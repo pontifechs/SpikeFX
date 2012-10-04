@@ -78,17 +78,30 @@ Vector Triangle::pt3() const
   return m_pt3;
 }
 
-void Triangle::Draw() const
+void Triangle::Draw(TexStack* override) const
 {
-  m_texStack.EnableTexStack();
+  TexStack texStack = m_texStack;
+  if (override != NULL)
+  {
+    texStack = *override;
+  }
+  
+  texStack.EnableTexStack();
   
   glBegin(GL_TRIANGLES);
 
   // Point 1
   glColor4f(m_col1.r(), m_col1.g(), m_col1.b(), m_col1.a());
-  for (int i = 0; i < m_tex1_stack.size(); i++)
+  for (int i = 0; i < texStack.TexCount(); i++)
   {
-    Vector tex = m_tex1_stack[i];
+    Vector tex;
+    if (i < m_tex1_stack.size())
+    {
+      tex = m_tex1_stack[i];
+    }
+    else {
+      tex = m_tex1_stack[0];
+    }
     glMultiTexCoord2f(GL_TEXTURE0 + i, tex.x(), tex.y());
   }
   glNormal3f(m_norm1.x(), m_norm1.y(), m_norm1.z());
@@ -96,9 +109,18 @@ void Triangle::Draw() const
 
   // Point 2
   glColor4f(m_col2.r(), m_col2.g(), m_col2.b(), m_col2.a());
-  for (int i = 0; i < m_tex1_stack.size(); i++)
+  for (int i = 0; i < texStack.TexCount(); i++)
   {
-    Vector tex = m_tex2_stack[i];
+    Vector tex;
+    if ( i < m_tex2_stack.size())
+    {
+      tex = m_tex2_stack[i];
+    }
+    else
+    {
+      tex = m_tex2_stack[0];
+    }
+
     glMultiTexCoord2f(GL_TEXTURE0 + i, tex.x(), tex.y());
   }
   glNormal3f(m_norm2.x(), m_norm2.y(), m_norm2.z());
@@ -106,14 +128,23 @@ void Triangle::Draw() const
 
   // Point 3
   glColor4f(m_col3.r(), m_col3.g(), m_col3.b(), m_col3.a());
-  for (int i = 0; i < m_tex1_stack.size(); i++)
+  for (int i = 0; i < texStack.TexCount(); i++)
   {
-    Vector tex = m_tex3_stack[i];
+    Vector tex;
+    if (i < m_tex3_stack.size())
+    {
+      tex = m_tex3_stack[i];
+    }
+    else
+    {
+      tex = m_tex3_stack[0];
+    }
     glMultiTexCoord2f(GL_TEXTURE0 + i, tex.x(), tex.y());
   }
   glNormal3f(m_norm3.x(), m_norm3.y(), m_norm3.z());
   glVertex3f(m_pt3.x(), m_pt3.y(), m_pt3.z());
   glEnd();
 
-  m_texStack.DisableTexStack();
+  texStack.DisableTexStack();
+
 }

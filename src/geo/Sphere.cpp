@@ -100,10 +100,6 @@ void Sphere::Generate(Vector center, float radius, float ang_inc)
       
       t1.PushTexCoords(tex1, tex2, tex3);
       t2.PushTexCoords(tex1, tex3, tex4);
-      t1.PushTexCoords(tex1, tex2, tex3);
-      t2.PushTexCoords(tex1, tex3, tex4);
-      t1.PushTexCoords(tex1, tex2, tex3);
-      t2.PushTexCoords(tex1, tex3, tex4);
 
       tris.push_back(t1);
       tris.push_back(t2);     
@@ -116,8 +112,13 @@ Sphere::Sphere()
 {
 }
 
-void Sphere::Draw() const
+void Sphere::Draw(TexStack* override) const
 {  
+  TexStack texStack = m_texStack;
+  if (override != NULL)
+  {
+    texStack = *override;
+  }
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 
@@ -133,14 +134,10 @@ void Sphere::Draw() const
   // Translate to Center
   glTranslatef(-m_center.x(), -m_center.y(), -m_center.z());
 
-  m_texStack.EnableTexStack();
-
   for (int i = 0; i < tris.size(); i++)
   {    
-    tris[i].Draw();
+    tris[i].Draw(&texStack);
   }
-
-  m_texStack.DisableTexStack();
 
   glPopMatrix();
 }

@@ -21,7 +21,7 @@ public:
 
   void Generate(Vector center, float radius, float angle_increment = 5);
 
-  virtual void Draw() const;
+  virtual void Draw(TexStack* override=0) const;
 
   // std::vector<Triangle> getTris(); 
 

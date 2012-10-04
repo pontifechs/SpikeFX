@@ -112,9 +112,14 @@ void Quad::SetColors(Color col1, Color col2, Color col3, Color col4)
 }
 
 
-void Quad::Draw() const
+void Quad::Draw(TexStack* override) const
 {
-  
+  TexStack texStack = m_texStack;
+  if (override != NULL)
+  {
+    texStack = *override;
+  }
+
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 
