@@ -88,6 +88,7 @@ void Scene::DrawScene()
 {
   // Set up OpenGL State
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_RESCALE_NORMAL); // Things may appear dark/odd without this
   
   // Camera Transform
   glMatrixMode(GL_MODELVIEW);

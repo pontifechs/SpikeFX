@@ -18,6 +18,7 @@
 #include "geo/Scene.hpp"
 #include "geo/Quad.hpp"
 #include "geo/Box.hpp"
+#include "geo/Asset.hpp"
 
 #include "math/Vector.hpp"
 #include "math/Color.hpp"
@@ -41,7 +42,7 @@ MultiTex* lightTex;
 
 Sphere* earth;
 Box* box;
-
+Asset* teapot;
 
 // GLUI Objects
 GLUI *glui;
@@ -448,7 +449,7 @@ void initGeometry()
   scene.SetUp(up);
   scene.SetFrustum(-1, 1, -1, 1, 1, 1000);
   
-  Color ambLight(1.0, 1.0, 1.0, 1.0);
+  Color ambLight(0.4, 0.4, 0.4, 1.0);
   scene.SetAmbient(ambLight);
   
   live_face_alpha = 0;
@@ -458,22 +459,29 @@ void initGeometry()
   faceTex = new MultiTex("../tex/mdudley.rgb", live_face_alpha, false);
   lightTex = new MultiTex("../tex/lightmap.rgb", 0.5, false);
 
-  Vector light_pos(5.0, 5.0, 5.0);
+
+  Vector light_pos(50.0, 50.0, 50.0);
   Color light_color = SOLID_WHITE;
   Light l(light_pos, light_color, GL_LIGHT0);
   scene.AddLight(l);
 
   Vector cent(0.0, 0.0, 0.0);
   earth = new Sphere();
-  earth->PushTex(earthTex);
-  earth->PushTex(faceTex);
-  earth->PushTex(lightTex);
+  // earth->PushTex(earthTex);
+  // earth->PushTex(faceTex);
+  // earth->PushTex(lightTex);
   earth->Generate(cent, 8.0, 5);
-  scene.AddGeometry(earth);
+//  scene.AddGeometry(earth);
 
   // box = new Box(cent, 2, 2, 2);
   // box->SetColor(SOLID_DARK_RED);
   // scene.AddGeometry(box);
+  
+  teapot = new Asset("../assets/teapot.obj");
+  teapot->SetTranslate(Vector(0.0, -8.0, 0.0));
+  teapot->SetScale(Vector(3.0, 3.0, 3.0));
+  scene.AddGeometry(teapot);
+  
   
 
 }
