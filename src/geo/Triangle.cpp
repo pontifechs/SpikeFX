@@ -146,5 +146,40 @@ void Triangle::Draw(TexStack* override) const
   glEnd();
 
   texStack.DisableTexStack();
+}
 
+
+std::vector<Quad> Triangle::GetShadowVolume(Vector lightPos) const
+{
+  std::vector<Quad> ret;
+
+  // Single Triangle is seemple.
+  //
+  // Quad 1 is points 1 and 2,
+  // Quad 2 is points 2 and 3,
+  // Quad 3 is points 3 and 1.
+
+
+  // Calculate the shadow quad edges
+  Vector l_to_pt1 = m_pt1 - lightPos;
+  Vector l_to_pt2 = m_pt2 - lightPos;
+  Vector l_to_pt3 = m_pt3 - lightPos;
+  
+  // Extend the edges past the viewing frustum
+  l_to_pt1 *= 10000;
+  l_to_pt2 *= 10000;
+  l_to_pt3 *= 10000;
+  
+
+  Vector zero(0.0, 0.0, 0.0);
+
+  Quad q1(m_pt1, m_pt2, l_to_pt2, l_to_pt1);
+  Quad q2(m_pt2, m_pt3, l_to_pt3, l_to_pt2);
+  Quad q3(m_pt3, m_pt1, l_to_pt1, l_to_pt3);
+
+  ret.push_back(q1);
+  ret.push_back(q2);
+  ret.push_back(q3);
+
+  return ret;
 }

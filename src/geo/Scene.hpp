@@ -6,16 +6,27 @@
 
 #include "geo/Geo.hpp"
 #include "geo/Light.hpp"
+#include "geo/Triangle.hpp"
 
 #include "math/Color.hpp"
 
 class Scene
 {
 public:
+  enum ShadowMode
+  {
+    NONE,
+    PROJECTIVE_SHADOWS,
+    SHADOW_VOLUMES
+  };
+
+
+
   Scene();
   Scene(Vector eye, Vector look, Vector up);
   
   void AddGeometry(Geo* new_geo);
+  void AddOccluder(Triangle* tri);
   void AddLight(Light new_light);
 
   void SetFrustum(float left, float right, 
@@ -33,11 +44,31 @@ public:
   void SetAmbient(Color color);
   Color GetAmbient() const;
 
-  void DrawScene();
+  void DrawScene() const;
+  
+  void SetShadowMode(ShadowMode mode);
+  ShadowMode GetShadowMode() const;
   
 protected:
 private:
+  void InitGLState() const;
+  void MVPTransform() const;
+  void PrepareLights() const;
+  void DisableLights() const;
+  void PrepareAmbient() const;
+  void DrawGeometry() const;
+
+
+
+  void DrawShadowVolume() const;
+
+  void RenderScene(bool ambient = true, bool diffuse = true) const;
+
+
+
+  // Geometry
   std::vector<Geo*> m_geometry;
+  std::vector<Triangle*> m_occluders;
   std::vector<Light> m_lighting;
   
   // Camera Coordinates
@@ -56,6 +87,7 @@ private:
   // Ambient lighting
   Color m_amb;
 
+  ShadowMode m_shadow_mode;
 };
 
 

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "geo/Geo.hpp"
+#include "geo/Quad.hpp"
 
 #include "math/Vector.hpp"
 #include "math/Color.hpp"
@@ -31,6 +32,8 @@ public:
   Vector pt3() const;
 
   virtual void Draw(TexStack* override=0) const;
+  
+  std::vector<Quad> GetShadowVolume(Vector lightPos) const;
 
 protected:
 private:

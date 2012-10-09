@@ -72,7 +72,6 @@ int live_sphere_tex_mode;
 
 int live_draw_lightmap;
 
-
 // Callback defines
 #define CB_TRANSFORM_RESET 0
 #define CB_DISSOLVE_START 1
@@ -83,9 +82,6 @@ int live_draw_lightmap;
 
 static void display(void)
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
-
   // Apply live data to geometry
   Vector eyeVect(eye[0], eye[1], eye[2]);
   Vector lookVect(lookat[0], lookat[1], lookat[2]);
@@ -93,40 +89,9 @@ static void display(void)
   scene.SetEye(eyeVect);
   scene.SetLook(lookVect);
 
-  switch(live_sphere_tex_mode)
-  {
-  case 0:
-    earthTex->SetMode(GL_MODULATE);
-    break;
-  case 1:
-    earthTex->SetMode(GL_REPLACE);
-    break;
-  case 2:
-    earthTex->SetMode(GL_BLEND);
-    break;
-  case 3:
-    earthTex->SetMode(GL_DECAL);
-    break;
-  }
-
-  if (live_face_anim)
-  {
-    live_face_alpha += live_anim_speed / 10.0;
-    if (live_face_alpha >= 1.0)
-    {
-      live_face_alpha = 0;
-    }
-  }
-
-  faceTex->SetAlpha(0.5);
-  lightTex->SetAlpha(0.5);
-
-//  earth->SetRotate(live_object_rotation);
-
   Vector translate(live_object_xz_trans[0], 
 		   live_object_y_trans,
     		   -live_object_xz_trans[1]);
-//  earth->SetTranslate(translate);
 
   scene.DrawScene();
 
@@ -254,7 +219,6 @@ void GLUIInit(void)
 		     &live_draw_lightmap, 
 		     CB_TOGGLE_LIGHTMAP, 
 		     glui_cb);
-
 
   glui->set_main_gfx_window(main_window);
 }
@@ -440,7 +404,7 @@ void initGeometry()
 {
   eye[0] = 0;
   eye[1] = 4;
-  eye[2] = 20;
+  eye[2] = 10;
   lookat[0] = 0;
   lookat[1] = 0;
   lookat[2] = 0;
@@ -449,41 +413,98 @@ void initGeometry()
   scene.SetUp(up);
   scene.SetFrustum(-1, 1, -1, 1, 1, 1000);
   
-  Color ambLight(0.4, 0.4, 0.4, 1.0);
+  Color ambLight(0.2, 0.2, 0.2, 1.0);
   scene.SetAmbient(ambLight);
   
   live_face_alpha = 0;
 
-
   earthTex = new BaseTex("../tex/eoe4.rgb", GL_MODULATE, false);
   faceTex = new MultiTex("../tex/mdudley.rgb", live_face_alpha, false);
   lightTex = new MultiTex("../tex/lightmap.rgb", 0.5, false);
+  BaseTex* checkerTex = new BaseTex("../tex/checkerboard.rgb", GL_MODULATE, true);
 
-
-  Vector light_pos(50.0, 50.0, 50.0);
+  Vector light_pos(5.0, 5.0, 5.0);
   Color light_color = SOLID_WHITE;
   Light l(light_pos, light_color, GL_LIGHT0);
   scene.AddLight(l);
+  
+  Sphere* light_model = new Sphere();
+  light_model->Generate(light_pos, 0.1, 5);
+  scene.AddGeometry(light_model);
 
-  Vector cent(0.0, 0.0, 0.0);
-  earth = new Sphere();
-  // earth->PushTex(earthTex);
-  // earth->PushTex(faceTex);
-  // earth->PushTex(lightTex);
-  earth->Generate(cent, 8.0, 5);
-//  scene.AddGeometry(earth);
+   Vector cent(0.0, 0.0, 0.0);
+  // earth = new Sphere();
+  // // earth->PushTex(earthTex);
+  // // earth->PushTex(faceTex);
+  // // earth->PushTex(lightTex);
+  // earth->Generate(cent, 3.0, 5);
+  // scene.AddGeometry(earth);
 
   // box = new Box(cent, 2, 2, 2);
   // box->SetColor(SOLID_DARK_RED);
   // scene.AddGeometry(box);
   
-  teapot = new Asset("../assets/teapot.obj");
-  teapot->SetTranslate(Vector(0.0, -8.0, 0.0));
-  teapot->SetScale(Vector(3.0, 3.0, 3.0));
-  scene.AddGeometry(teapot);
+  // teapot = new Asset("../assets/teapot.obj");
+  // teapot->SetTranslate(Vector(0.0, -8.0, 0.0));
+  // scene.AddGeometry(teapot);
   
-  
+  Vector tri1(0.0, 0.0, 0.0);
+  Vector tri2(0.0, 2.0, 0.0);
+  Vector tri3(2.0, 0.0, 0.0);
+  Vector tnorm(0.0, 0.0, -1.0);
+  Triangle* t = new Triangle(tri1, tri2, tri3, SOLID_RED);
+  t->SetNormals(tnorm, tnorm, tnorm);
+  scene.AddOccluder(t);
 
+  Vector fpt1(-10.0, -4.0, -10.0);
+  Vector fpt2(-10.0, -4.0,  10.0);
+  Vector fpt3(10.0, -4.0, 10.0);
+  Vector fpt4(10.0, -4.0, -10.0);
+  Vector fnorm(0.0, 1.0, 0.0);
+  Vector ftex1(-1.0, -1.0, 0.0);
+  Vector ftex2(-1.0, 1.0, 0.0);
+  Vector ftex3(1.0, 1.0, 0.0);
+  Vector ftex4(1.0, -1.0, 0.0);
+  Quad* floor = new Quad(fpt1, fpt2, fpt3, fpt4, SOLID_WHITE);
+  fnorm.normalize();
+  floor->SetNormals(fnorm, fnorm, fnorm, fnorm);
+  floor->PushTex(checkerTex);
+  floor->PushTexCoords(ftex1, ftex2, ftex3, ftex4);
+  scene.AddGeometry(floor); 
+
+  Color lightblue(0.75, 0.75, 1.0, 1.0);
+
+  Vector lwallpt1(-10.0, -4.0, -10.0);
+  Vector lwallpt2(-10.0, 10.0, -10.0);
+  Vector lwallpt3(-10.0, 10.0, 10.0);
+  Vector lwallpt4(-10.0, -4.0, 10.0);
+  Vector lwallnorm(1.0, 0.0, 0.0);
+  Quad* lwall = new Quad(lwallpt1, lwallpt2, lwallpt3, lwallpt4, lightblue);
+  lwallnorm.normalize();
+  lwall->SetNormals(lwallnorm, lwallnorm, lwallnorm, lwallnorm);
+  scene.AddGeometry(lwall);
+
+  Vector rwallpt1(10.0, -4.0, -10.0);
+  Vector rwallpt2(10.0, 10.0, -10.0);
+  Vector rwallpt3(10.0, 10.0, 10.0);
+  Vector rwallpt4(10.0, -4.0, 10.0);
+  Vector rwallnorm(-1.0, 0.0, 0.0);
+  Quad* rwall = new Quad(rwallpt4, rwallpt3, rwallpt2, rwallpt1, lightblue);
+  rwallnorm.normalize();
+  rwall->SetNormals(rwallnorm, rwallnorm, rwallnorm, rwallnorm);
+  scene.AddGeometry(rwall);
+  
+  Vector bwallpt1(-10.0, -4.0, -10.0);
+  Vector bwallpt2(-10.0, 10.0, -10.0);
+  Vector bwallpt3(10.0, 10.0, -10.0);
+  Vector bwallpt4(10.0, -4.0, -10.0);
+  Vector bwallnorm(0.0, 0.0, 1.0);
+  Quad* bwall = new Quad(bwallpt1, bwallpt2, bwallpt3, bwallpt4, lightblue);
+  bwallnorm.normalize();
+  bwall->SetNormals(bwallnorm, bwallnorm, bwallnorm, bwallnorm);
+  scene.AddGeometry(bwall);
+
+  scene.SetShadowMode(Scene::SHADOW_VOLUMES);
 }
 
 void myGlutIdle(void)
@@ -511,7 +532,7 @@ int main(int argc, char* argv[])
   
   // Initialize the Window
   glutInit(&argc, argv);
-  glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );  
+  glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL );  
   glutInitWindowSize(1000,700);
   main_window = glutCreateWindow("Spike");  
 

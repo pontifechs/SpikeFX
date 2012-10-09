@@ -18,10 +18,10 @@ Light::Light(Vector pos, Color color, GLenum target)
 }
 
 
-void Light::PrepareLight()
+void Light::PrepareLight() const
 {
-  GLfloat pos[] = { m_pos.x(), m_pos.y(), m_pos.z(), 0.0};
-  GLfloat color[] = { m_color.r(), m_color.g(), m_color.b(), m_color.a()};
+  GLfloat pos[] = {m_pos.x(), m_pos.y(), m_pos.z(), 0.0};
+  GLfloat color[] = {m_color.r(), m_color.g(), m_color.b(), m_color.a()};
 
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glShadeModel(GL_SMOOTH);
@@ -30,7 +30,20 @@ void Light::PrepareLight()
   glLightfv(m_target, GL_DIFFUSE, color);
   glLightfv(m_target, GL_SPECULAR, color);
 
-  glEnable(GL_LIGHTING);
   glEnable(m_target);
-  glEnable(GL_COLOR_MATERIAL);  
+}
+
+void Light::DisableLight() const
+{
+  glDisable(m_target);
+}
+
+Vector Light::GetPosition() const
+{
+  return m_pos;
+}
+
+void Light::SetPosition(Vector pos)
+{
+  m_pos = pos;
 }

@@ -12,7 +12,12 @@ class Light
 public:
   Light(Vector pos, Color color, GLenum target);
 
-  void PrepareLight();
+  void PrepareLight() const;
+  void DisableLight() const;
+  
+  Vector GetPosition() const;
+  void SetPosition(Vector pos);
+
 protected:
 private:
   Vector m_pos;  
