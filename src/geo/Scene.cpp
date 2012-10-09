@@ -236,8 +236,8 @@ void Scene::InitGLState() const
 {
   // Set up OpenGL State
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+//  glEnable(GL_CULL_FACE);
+//  glCullFace(GL_BACK);
 //  glEnable(GL_RESCALE_NORMAL); // Things may appear dark/odd without this
   glEnable(GL_NORMALIZE);
 }

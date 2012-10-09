@@ -451,7 +451,7 @@ void initGeometry()
   Vector tri1(0.0, 0.0, 0.0);
   Vector tri2(0.0, 2.0, 0.0);
   Vector tri3(2.0, 0.0, 0.0);
-  Vector tnorm(0.0, 0.0, -1.0);
+  Vector tnorm(0.0, 0.0, 1.0);
   Triangle* t = new Triangle(tri1, tri2, tri3, SOLID_RED);
   t->SetNormals(tnorm, tnorm, tnorm);
   scene.AddOccluder(t);
@@ -488,7 +488,7 @@ void initGeometry()
   Vector rwallpt2(10.0, 10.0, -10.0);
   Vector rwallpt3(10.0, 10.0, 10.0);
   Vector rwallpt4(10.0, -4.0, 10.0);
-  Vector rwallnorm(-1.0, 0.0, 0.0);
+  Vector rwallnorm(1.0, 0.0, 0.0);
   Quad* rwall = new Quad(rwallpt4, rwallpt3, rwallpt2, rwallpt1, lightblue);
   rwallnorm.normalize();
   rwall->SetNormals(rwallnorm, rwallnorm, rwallnorm, rwallnorm);
