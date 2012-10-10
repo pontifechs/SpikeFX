@@ -17,7 +17,8 @@ public:
   {
     NONE,
     PROJECTIVE_SHADOWS,
-    SHADOW_VOLUMES
+    SHADOW_VOLUMES,
+    SHADOW_MAP
   };
 
 
@@ -27,7 +28,8 @@ public:
   
   void AddGeometry(Geo* new_geo);
   void AddOccluder(Triangle* tri);
-  void AddLight(Light new_light);
+  void AddReceiver(Quad* quad);
+  void AddLight(Light* new_light);
 
   void SetFrustum(float left, float right, 
 		  float top, float bot, 
@@ -61,6 +63,8 @@ private:
 
 
   void DrawShadowVolume() const;
+  void DrawShadowMap() const;
+  void DrawProjectiveShadows() const;
 
   void RenderScene(bool ambient = true, bool diffuse = true) const;
 
@@ -69,7 +73,8 @@ private:
   // Geometry
   std::vector<Geo*> m_geometry;
   std::vector<Triangle*> m_occluders;
-  std::vector<Light> m_lighting;
+  std::vector<Quad*> m_receivers;
+  std::vector<Light*> m_lighting;
   
   // Camera Coordinates
   Vector m_eye;

@@ -20,7 +20,9 @@ Light::Light(Vector pos, Color color, GLenum target)
 
 void Light::PrepareLight() const
 {
-  GLfloat pos[] = {m_pos.x(), m_pos.y(), m_pos.z(), 0.0};
+  GLfloat pos[] = {m_pos.x() + m_trans.x(), 
+		   m_pos.y() + m_trans.y(), 
+		   m_pos.z() + m_trans.z(), 0.0};
   GLfloat color[] = {m_color.r(), m_color.g(), m_color.b(), m_color.a()};
 
   glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -40,10 +42,30 @@ void Light::DisableLight() const
 
 Vector Light::GetPosition() const
 {
-  return m_pos;
+  return m_pos + m_trans;
 }
 
 void Light::SetPosition(Vector pos)
 {
   m_pos = pos;
+}
+
+void Light::SetTranslate(Vector trans)
+{
+  m_trans = trans;
+}
+
+Vector Light::GetTranslate() const
+{
+  return m_trans;
+}
+
+void Light::SetColor(Color color)
+{
+  m_color = color;
+}
+
+Color Light::GetColor() const
+{
+  return m_color;
 }

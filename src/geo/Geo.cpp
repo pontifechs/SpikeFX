@@ -44,3 +44,8 @@ Vector Geo::GetCenter() const
 {
   return m_center;
 }
+
+Geo* Geo::GetTransformed(Vector light, Vector origin, Vector normal)
+{
+  return NULL;
+}

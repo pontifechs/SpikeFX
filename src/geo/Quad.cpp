@@ -21,6 +21,16 @@ Quad::Quad(const Quad& rhs)
   (*this) = rhs;
 }
 
+Vector Quad::GetNormal() const
+{
+  return m_norm1;
+}
+
+Vector Quad::GetOrigin() const
+{
+  return m_pt1;
+}
+
 Quad& Quad::operator=(const Quad& rhs)
 {
   if (this == &rhs) 
@@ -229,3 +239,31 @@ void Quad::Draw(TexStack* override) const
   texStack.DisableTexStack();
 }
 
+Geo* Quad::GetTransformed(Vector light, Vector origin, Vector normal)
+{
+  Quad* ret = NULL;
+  Vector e = light;
+  Vector d1 = (m_pt1 + m_trans) - light;
+  Vector d2 = (m_pt2 + m_trans) - light;
+  Vector d3 = (m_pt3 + m_trans) - light;
+  Vector d4 = (m_pt4 + m_trans) - light;
+
+  float t1 = (origin - e).dot(normal) / (d1.dot(normal));
+  float t2 = (origin - e).dot(normal) / (d2.dot(normal));
+  float t3 = (origin - e).dot(normal) / (d3.dot(normal));
+  float t4 = (origin - e).dot(normal) / (d4.dot(normal));
+
+
+  // Shadow doesn't project onto this polygon.
+  if (t1 < 0 || t2 < 0 || t3 < 0 || t4 < 0)
+  {
+    return ret;
+  }
+  
+  Vector newPt1 = (d1 * (t1 * 0.99)) + e;
+  Vector newPt2 = (d2 * (t2 * 0.99)) + e;
+  Vector newPt3 = (d3 * (t3 * 0.99)) + e;
+  Vector newPt4 = (d4 * (t4 * 0.99)) + e;
+  ret = new Quad(newPt1, newPt2, newPt3, newPt4);
+  return ret;
+}

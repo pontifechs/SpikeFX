@@ -1,6 +1,7 @@
 #ifndef __GUARD_MATRIX_HPP__
 #define __GUARD_MATRIX_HPP__
 
+#include "math/Vector.hpp"
 
 class Matrix {
 
@@ -44,6 +45,9 @@ public:
   Matrix operator- (const Matrix& rhs) const;
   // * Operator overload
   Matrix operator* (const Matrix& rhs) const;
+  // * Operator overload
+  Vector operator* (const Vector& rhs) const;
+  
 
   bool operator== (const Matrix& rhs) const;
   bool operator!= (const Matrix& rhs) const;

@@ -34,19 +34,23 @@ void Scene::AddOccluder(Triangle* tri)
   m_occluders.push_back(tri);
 }
 
-void Scene::AddLight(Light new_light)
+void Scene::AddReceiver(Quad* quad)
+{
+  m_receivers.push_back(quad);
+}
+
+void Scene::AddLight(Light* new_light)
 {
   m_lighting.push_back(new_light);
 }
-
 
 void Scene::SetFrustum(float left, float right,
 		       float bot,  float top,
 		       float near, float far)
 {
   m_left = left; m_right = right;
-  m_bot = bot;   m_top = top; 
-  m_near = near; m_far = far;
+  m_bot  = bot;  m_top   = top; 
+  m_near = near; m_far   = far;
 }
 
 void Scene::SetEye(Vector eye)
@@ -96,11 +100,18 @@ void Scene::DrawScene() const
   {
   case NONE:
     RenderScene(true, true);
+    break;
   case PROJECTIVE_SHADOWS:
-    RenderScene(true, true);
+//    RenderScene(true, true);
+    DrawProjectiveShadows();
+    break;
   case SHADOW_VOLUMES:
-    RenderScene(true, true);
-//    DrawShadowVolume();
+//    RenderScene(true, true);
+    DrawShadowVolume();
+    break;
+  case SHADOW_MAP:
+    DrawShadowMap();
+    break;
   }
 }
 
@@ -121,6 +132,7 @@ void Scene::RenderScene(bool ambient, bool diffuse) const
 
   DrawGeometry();
 
+
   if (diffuse)
   {
     DisableLights();
@@ -129,8 +141,6 @@ void Scene::RenderScene(bool ambient, bool diffuse) const
 
 void Scene::DrawShadowVolume() const
 {
-  glEnable(GL_STENCIL_TEST);
-
   // ZPass Method
   // 1. Compute Shadow Volumes
   std::vector<Quad> shadow_quads;
@@ -140,16 +150,44 @@ void Scene::DrawShadowVolume() const
     for (int j = 0; j < m_lighting.size(); j++)
     {
       Triangle* t = m_occluders[i];
-      Light l = m_lighting[j];
-      std::vector<Quad> t_quads = t->GetShadowVolume(l.GetPosition());
+      Light* l = m_lighting[j];
+      std::vector<Quad> t_quads = t->GetShadowVolume(l->GetPosition());
       shadow_quads.insert(shadow_quads.end(), t_quads.begin(), t_quads.end());
+    }
+  }
+  
+  // !! WARNING !!
+  // This is a huge hack because I don't have time to figure out the true issue.
+  //
+  // Since Something odd is going on with the normals, calc back-face by hand.
+  // If dot product between normal and look vector is positive, front-face.
+  // Otherwise, back-face.
+
+  std::vector<Quad> front_faces;
+  std::vector<Quad> back_faces;
+  Vector lookat = m_look - m_eye;
+
+  for (int i = 0; i < shadow_quads.size(); i++)
+  {
+    Vector norm = shadow_quads[i].GetNormal();
+
+    // printf("lookat: %f %f %f\n", lookat.x(), lookat.y(), lookat.z());
+    // printf("norm: %f %f %f\n", norm.x(), norm.y(), norm.z());
+    // printf("dot: %f\n", norm.dot(lookat));
+
+    if (norm.dot(lookat) > 0)
+    {
+      front_faces.push_back(shadow_quads[i]);
+    }
+    else 
+    {
+      back_faces.push_back(shadow_quads[i]);
     }
   }
 
   // 2. Clear Stencil Buffer
   glClearStencil(0);
   glClear(GL_STENCIL_BUFFER_BIT);
-
 
   // 3. Render the scene ambient only
   //      - Sets the Depth and Color buffers
@@ -158,48 +196,128 @@ void Scene::DrawShadowVolume() const
   // 4. Turn off color and depth updates (leave depth test on)
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
   glDepthMask(GL_FALSE);
+  glEnable(GL_STENCIL_TEST);
 
   // 5. Render shadow volume front faces, increment depth buffer on zpass
-  // 6. Render shadow volume back faces, decrement depth buffer on zpass
-  glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_KEEP, GL_INCR);
-  glStencilOpSeparate(GL_BACK, GL_KEEP, GL_KEEP, GL_INCR);
-  
-  for (int i = 0; i < shadow_quads.size(); i++)
+  glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+  for (int i = 0; i < front_faces.size(); i++)
   {
-    shadow_quads[i].Draw();
+    front_faces[i].Draw();
   }
 
+  // 6. Render shadow volume back faces, decrement depth buffer on zpass
+  glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
+  for (int i = 0; i < back_faces.size(); i++)
+  {
+    back_faces[i].Draw();
+  }
 
   // 7. Render scene with diffuse only where stencil = 0
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glDepthMask(GL_TRUE);
   
-  glStencilFunc(GL_EQUAL, 0, 0xFFFF);
-
 
   // Need to clear the depth buffer or nothing will get drawn.
   glClear(GL_DEPTH_BUFFER_BIT);
-  glCullFace(GL_BACK);
+  glStencilFunc(GL_EQUAL, 0, 0xFF);
 
   PrepareLights();
   DrawGeometry();
   DisableLights();
-
 
   // Reset OpenGL state  
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
   glDisable(GL_STENCIL_TEST);
 }
 
+void Scene::DrawShadowMap() const
+{
+  
+
+
+}
+
+
+void Scene::DrawProjectiveShadows() const
+{
+  glClear(GL_STENCIL_BUFFER_BIT);
+  // 1. Calculate Shadow Geometry
+  // Project each tri/quad to be shadowed onto all other tris/quads.
+
+  std::vector<Geo*> shadow_geo;
+
+  // Vector pt1(-3.0, -3.0, -4);
+  // Vector pt2(-3.0,  3.0, -4);
+  // Vector pt3( 3.0,  3.0, -4);
+  // Vector pt4( 3.0, -3.0, -4);
+  // Quad test(pt1, pt2, pt3, pt4);
+  // shadow_geo.push_back(&test);
+
+
+  for (int lights = 0; lights < m_lighting.size(); lights++)
+  {
+    Vector l = m_lighting[lights]->GetPosition();
+    for (int i = 0; i < m_geometry.size(); i++)
+    {
+      Geo* g = m_geometry[i];
+      for (int j = 0; j < m_receivers.size(); j++)
+      {
+  	Quad* q = m_receivers[j];
+	
+  	Vector o = q->GetOrigin();
+  	Vector n = q->GetNormal();
+	
+  	Geo* ret = g->GetTransformed(l, o, n);
+  	if (ret != NULL)
+  	{
+  	  shadow_geo.push_back(ret);
+  	}
+      }
+    }
+  }
+
+  // 2. Draw Scene Ambient Only
+  RenderScene(true, false);
+
+  // 3. Render Shadow Geometry into Stencil Buffer; color, depth updates off
+  glEnable(GL_DEPTH_TEST);
+  glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+  glDepthMask(GL_FALSE);
+
+  glEnable(GL_STENCIL_TEST);
+
+  glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+  for (int i = 0; i < shadow_geo.size(); i++)
+  {
+    shadow_geo[i]->Draw();
+  }
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+  // 4. Clear Depth Buffer, Draw Scene Diffuse/Ambient where stencil = 0
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glDepthMask(GL_TRUE);
+  glClear(GL_DEPTH_BUFFER_BIT);
+
+
+  glStencilFunc(GL_EQUAL, 0, 0xFF);
+
+  PrepareLights();
+
+  DrawGeometry();
+  
+  DisableLights();
+
+  // 5. Reset OpenGL state
+  glDisable(GL_STENCIL_TEST);
+}
+
 
 void Scene::PrepareLights() const
 {
-  glEnable(GL_LIGHTING);
-
   // Run through all of the lights
   for (int i = 0; i < m_lighting.size(); i++)
   {
-    m_lighting[i].PrepareLight();
+    m_lighting[i]->PrepareLight();
   }
 }
 
@@ -207,9 +325,8 @@ void Scene::DisableLights() const
 {
   for (int i = 0; i < m_lighting.size(); i++)
   {
-    m_lighting[i].DisableLight();
+    m_lighting[i]->DisableLight();
   }
-
 }
 
 void Scene::PrepareAmbient() const
@@ -230,6 +347,11 @@ void Scene::DrawGeometry() const
   {
     m_geometry[i]->Draw();
   }
+  for (int i = 0; i < m_receivers.size(); i++)
+  {
+    m_receivers[i]->Draw();
+  }
+
 }
 
 void Scene::InitGLState() const

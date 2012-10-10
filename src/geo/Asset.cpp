@@ -8,6 +8,10 @@
 
 #include <vector>
 
+Asset::Asset()
+{
+}
+
 Asset::Asset(std::string filename)
 {
   // Read in the .obj file into a vector
@@ -39,7 +43,7 @@ Asset::Asset(std::string filename)
 
       Vector pt(x, y, z, 1.0);
       
-      Triangle t;
+      Triangle* t;
 
       Vector side1;
       Vector side2;
@@ -51,14 +55,14 @@ Asset::Asset(std::string filename)
 	vertices.push_back(pt);
 	break;
       case 'f':
-	t = Triangle(vertices[x],
-		     vertices[y],
-		     vertices[z], SOLID_DARK_RED);
+	t = new Triangle(vertices[x],
+			 vertices[y],
+			 vertices[z], SOLID_DARK_RED);
 	side1 = vertices[z] - vertices[x]; // vec from 1 to 3;
 	side2 = vertices[y] - vertices[x]; // vec from 1 to 2
 	norm = side2.cross(side1);
 	norm.normalize();
-	t.SetNormals(norm, norm, norm);
+	t->SetNormals(norm, norm, norm);
 	
 	m_geometry.push_back(t);
 	break;
@@ -94,8 +98,35 @@ void Asset::Draw(TexStack* override) const
 
   for (int i = 0; i < m_geometry.size(); i++)
   {
-    m_geometry[i].Draw();
+    m_geometry[i]->Draw();
   }
-
+  
   glPopMatrix();
+}
+
+
+void Asset::AddGeo(Geo* geo)
+{
+  if (geo != NULL)
+  {
+    m_geometry.push_back(geo);
+  }
+}
+
+Geo* Asset::GetTransformed(Vector light, Vector origin, Vector normal)
+{
+  Asset* ret = new Asset();
+  for (int i = 0; i < m_geometry.size(); i++)
+  {
+    Geo* g = m_geometry[i];
+    g->SetTranslate(m_trans);
+    Geo* geo_proj = g->GetTransformed(light, origin, normal);
+    g->SetTranslate(Vector(0.0, 0.0, 0.0));
+    if (geo_proj != NULL)
+    {
+      ret->AddGeo(geo_proj);
+    }
+  }
+     
+  return ret;
 }

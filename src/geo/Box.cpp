@@ -10,7 +10,7 @@
 
 
 #include "geo/Box.hpp"
-
+#include "geo/Asset.hpp"
 
 #include "math/Vector.hpp"
 #include "math/Color.hpp"
@@ -86,8 +86,6 @@ void Box::BuildQuads(float min_x, float max_x, float min_y,
   float mid_z = (min_z + max_z) /2;
   m_center = Vector(mid_x, mid_y, mid_z);
 }
-
-
 
 
 void Box::SetColor(Color col, Face face)
@@ -195,4 +193,58 @@ void Box::Draw(TexStack* override) const
   m_far.Draw(&texStack);
 
   glPopMatrix();
+}
+
+Geo* Box::GetTransformed(Vector light, Vector origin, Vector normal)
+{
+  Asset* ret = new Asset();
+  m_top.SetTranslate(m_trans);
+  Geo* top_proj = m_top.GetTransformed(light, origin, normal);
+  m_top.SetTranslate(Vector(0.0, 0.0, 0.0));
+  if (top_proj != NULL)
+  {
+    ret->AddGeo(top_proj);
+  }
+
+  m_bot.SetTranslate(m_trans);
+  Geo* bot_proj = m_bot.GetTransformed(light, origin, normal);
+  m_bot.SetTranslate(Vector(0.0, 0.0, 0.0));
+  if (bot_proj != NULL)
+  {
+    ret->AddGeo(bot_proj);
+  }
+
+  m_left.SetTranslate(m_trans);
+  Geo* left_proj = m_left.GetTransformed(light, origin, normal);
+  m_left.SetTranslate(Vector(0.0, 0.0, 0.0));
+  if (left_proj != NULL)
+  {
+    ret->AddGeo(left_proj);
+  }
+
+  m_right.SetTranslate(m_trans);
+  Geo* right_proj = m_right.GetTransformed(light, origin, normal);
+  m_right.SetTranslate(Vector(0.0, 0.0, 0.0));
+  if (right_proj != NULL)
+  {
+    ret->AddGeo(right_proj);
+  }
+
+  m_near.SetTranslate(m_trans);
+  Geo* near_proj = m_near.GetTransformed(light, origin, normal);
+  m_near.SetTranslate(Vector(0.0, 0.0, 0.0));
+  if (near_proj != NULL)
+  {
+    ret->AddGeo(near_proj);
+  }
+
+  m_far.SetTranslate(m_trans);
+  Geo* far_proj = m_far.GetTransformed(light, origin, normal);
+  m_far.SetTranslate(Vector(0.0, 0.0, 0.0));
+  if (far_proj != NULL)
+  {
+    ret->AddGeo(far_proj);
+  }
+
+  return ret;
 }

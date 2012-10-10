@@ -26,8 +26,12 @@ public:
   void ClearTexCoords();
 
   void SetNormals(Vector norm1, Vector norm2, Vector norm3, Vector norm4);
+  Vector GetNormal() const;
+  Vector GetOrigin() const;
   
   virtual void Draw(TexStack* override=0) const;
+  virtual Geo* GetTransformed(Vector light, Vector origin, Vector normal);
+
 
 protected:
 private:

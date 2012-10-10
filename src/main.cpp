@@ -1,4 +1,3 @@
-
 #ifdef __APPLE__ 
   #include <GLUT/glut.h>
   #include <GLUI/glui.h>
@@ -43,41 +42,47 @@ MultiTex* lightTex;
 Sphere* earth;
 Box* box;
 Asset* teapot;
+Triangle* triangle;
+Light* l;
+
 
 // GLUI Objects
 GLUI *glui;
-GLUI_Rollout		*object_rollout;
-GLUI_Rotation		*object_rotation;
-GLUI_Translation	*object_xz_trans;
-GLUI_Translation	*object_y_trans;
-GLUI_RadioGroup         *sphere_tex_mode;
 
-GLUI_Rollout		*anim_rollout;
-GLUI_Button		*start_button;
-GLUI_Button             *stop_button;
-GLUI_Button             *reset_button;
+GLUI_Rollout            *shadow_mode_rollout;
+GLUI_RadioGroup         *shadow_mode;
 
-GLUI_Checkbox           *draw_light_check;
+GLUI_Rollout		*light_rollout;
+GLUI_Translation	*light_xz_trans;
+GLUI_Translation	*light_y_trans;
+
+GLUI_Rollout		*teapot_rollout;
+GLUI_Translation	*teapot_xz_trans;
+GLUI_Translation	*teapot_y_trans;
+
+GLUI_Rollout		*triangle_rollout;
+GLUI_Translation	*triangle_xz_trans;
+GLUI_Translation	*triangle_y_trans;
+
 
 // Live vars
-float live_object_rotation[16];
-float live_object_xz_trans[2];
-float live_object_y_trans;
+int live_shadow_mode;
 
+float live_light_xz_trans[2];
+float live_light_y_trans;
+float live_light_intensity;
 
-bool live_face_anim;
-float live_face_alpha;
-float live_anim_speed;
-int live_sphere_tex_mode;
+float live_teapot_xz_trans[2];
+float live_teapot_y_trans;
 
-int live_draw_lightmap;
+float live_triangle_xz_trans[2];
+float live_triangle_y_trans;
+
 
 // Callback defines
-#define CB_TRANSFORM_RESET 0
-#define CB_DISSOLVE_START 1
-#define CB_DISSOLVE_STOP 2
-#define CB_DISSOLVE_RESET 3
-#define CB_TOGGLE_LIGHTMAP 4
+#define CB_LIGHT_RESET 0
+#define CB_TEAPOT_RESET 1
+#define CB_TRIANGLE_RESET 2
 
 
 static void display(void)
@@ -89,9 +94,41 @@ static void display(void)
   scene.SetEye(eyeVect);
   scene.SetLook(lookVect);
 
-  Vector translate(live_object_xz_trans[0], 
-		   live_object_y_trans,
-    		   -live_object_xz_trans[1]);
+  Vector light_translate(live_light_xz_trans[0], 
+			 live_light_y_trans,
+			 -live_light_xz_trans[1]);
+  Color light_color(live_light_intensity,
+		    live_light_intensity,
+		    live_light_intensity, 1.0);
+  
+  l->SetTranslate(light_translate);
+  l->SetColor(light_color);
+  
+
+  // Vector teapot_translate(live_teapot_xz_trans[0], 
+  // 			  live_teapot_y_trans,
+  // 			  -live_teapot_xz_trans[1]);
+  // box->SetTranslate(teapot_translate);
+  // teapot->SetTranslate(teapot_translate);
+  
+  // Vector triangle_translate(live_triangle_xz_trans[0], 
+  // 			    live_triangle_y_trans,
+  // 			    -live_triangle_xz_trans[1]);
+  
+  // triangle->SetTranslate(triangle_translate);
+  
+  switch (live_shadow_mode)
+  {
+  case 0:
+    scene.SetShadowMode(Scene::NONE);
+    break;
+  case 1:
+    scene.SetShadowMode(Scene::PROJECTIVE_SHADOWS);
+    break;
+  case 2:
+    scene.SetShadowMode(Scene::SHADOW_VOLUMES);
+    break;
+  }
 
   scene.DrawScene();
 
@@ -102,48 +139,15 @@ static void display(void)
 // some controls generate a callback when they are changed
 void glui_cb(int control)
 {
-  switch(control)
+  switch (control)
   {
-  case CB_TRANSFORM_RESET:
-    // Zero out the translations/rotation
-    live_object_rotation[0] = 1;
-    live_object_rotation[1] = 0;
-    live_object_rotation[2] = 0;
-    live_object_rotation[3] = 0;
-
-    live_object_rotation[4] = 0;
-    live_object_rotation[5] = 1;
-    live_object_rotation[6] = 0;
-    live_object_rotation[7] = 0;
-
-    live_object_rotation[8] = 0;
-    live_object_rotation[9] = 0;
-    live_object_rotation[10] = 1;
-    live_object_rotation[11] = 0;
-
-    live_object_rotation[12] = 0;
-    live_object_rotation[13] = 0;
-    live_object_rotation[14] = 0;
-    live_object_rotation[15] = 1;
-
-    live_object_xz_trans[0] = 0;
-    live_object_xz_trans[1] = 0;
-    live_object_y_trans = 0;    
-
+  case CB_LIGHT_RESET:
     break;
-  case CB_DISSOLVE_START:
-    live_face_anim = true;
+  case CB_TEAPOT_RESET:
     break;
-  case CB_DISSOLVE_STOP:
-    live_face_anim = false;
-    break;
-  case CB_DISSOLVE_RESET:
-    live_face_anim = false;
-    live_face_alpha = 0.0f;
+  case CB_TRIANGLE_RESET:
     break;
   }
-
-
   glutPostRedisplay();
 }
 
@@ -154,71 +158,103 @@ void GLUIInit(void)
   GLUI* glui = GLUI_Master.create_glui_subwindow(main_window, GLUI_SUBWINDOW_RIGHT);
 
   // the object rollout
-  object_rollout = glui->add_rollout("Object");
+  shadow_mode_rollout = glui->add_rollout("Shadow Mode");
 
   // the radio buttons
-  sphere_tex_mode = glui->add_radiogroup_to_panel(object_rollout, 
-						  &live_sphere_tex_mode);
-  glui->add_radiobutton_to_group(sphere_tex_mode, "GL_MODULATE");
-  glui->add_radiobutton_to_group(sphere_tex_mode, "GL_REPLACE");
-  glui->add_radiobutton_to_group(sphere_tex_mode, "GL_BLEND");
-  glui->add_radiobutton_to_group(sphere_tex_mode, "GL_DECAL");
+  shadow_mode = glui->add_radiogroup_to_panel(shadow_mode_rollout, 
+					      &live_shadow_mode);
+  glui->add_radiobutton_to_group(shadow_mode, "None");
+  glui->add_radiobutton_to_group(shadow_mode, "Proj. Shadows");
+  glui->add_radiobutton_to_group(shadow_mode, "Shadow Volumes");
 
+  
+  light_rollout = glui->add_rollout("Light Translate");
   // rotation and translation controls
   // we need an extra panel to keep things grouped properly
-  GLUI_Panel *transform_panel = glui->add_panel_to_panel(object_rollout, "", 
-							 GLUI_PANEL_NONE);
-  object_rotation = glui->add_rotation_to_panel(transform_panel, "Rotation", 
-						live_object_rotation);
-  object_rotation->reset();
+  GLUI_Panel *light_trans_panel = glui->add_panel_to_panel(light_rollout, "", 
+							   GLUI_PANEL_NONE);
+  light_xz_trans = glui->add_translation_to_panel(light_trans_panel, 
+						  "Translate XZ", 
+						  GLUI_TRANSLATION_XY, 
+						  live_light_xz_trans);
 
-  glui->add_column_to_panel(transform_panel, false);
-  object_xz_trans = glui->add_translation_to_panel(transform_panel, 
-						   "Translate XZ", 
-						   GLUI_TRANSLATION_XY, 
-						   live_object_xz_trans);
+  glui->add_column_to_panel(light_trans_panel, false);
+  light_y_trans =  glui->add_translation_to_panel(light_trans_panel, 
+						  "Translate Y", 
+						  GLUI_TRANSLATION_Y, 
+						  &live_light_y_trans);
 
-  glui->add_column_to_panel(transform_panel, false);
-  object_y_trans =  glui->add_translation_to_panel(transform_panel, 
-						   "Translate Y", 
-						   GLUI_TRANSLATION_Y, 
-						   &live_object_y_trans);
+  light_xz_trans->scale_factor = 0.1f;
+  light_y_trans->scale_factor = 0.1f;
 
-  object_xz_trans->scale_factor = 0.1f;
-  object_y_trans->scale_factor = 0.1f;
+  GLUI_Spinner *spin_s = glui->add_spinner_to_panel(light_rollout, 
+						    "Intensity", 
+						    GLUI_SPINNER_FLOAT, 
+						    &live_light_intensity);
+  spin_s->set_float_limits(0.0, 1.0);
 
-  glui->add_button_to_panel(object_rollout, "Reset Object Transform", 
-			    CB_TRANSFORM_RESET, glui_cb);
+  glui->add_button_to_panel(light_rollout, "Reset Light",
+			    CB_LIGHT_RESET, glui_cb);
+
+
+
 
   // empty space
   glui->add_statictext("");
-  // the walk control
-  anim_rollout = glui->add_rollout("Animation");
 
-  start_button = glui->add_button_to_panel(anim_rollout, 
-					   "Start", 
-					   CB_DISSOLVE_START,
-					   glui_cb);
-  stop_button = glui->add_button_to_panel(anim_rollout, 
-					  "Stop", 
-					  CB_DISSOLVE_STOP,
-					  glui_cb);
-  reset_button = glui->add_button_to_panel(anim_rollout, 
-					   "Reset", 
-					   CB_DISSOLVE_RESET,
-					   glui_cb);
 
-  GLUI_Spinner *spin_s = glui->add_spinner_to_panel(anim_rollout, 
-						    "Speed", 
-						    GLUI_SPINNER_FLOAT, 
-						    &live_anim_speed);
+  teapot_rollout = glui->add_rollout("Teapot Translate");
+  // rotation and translation controls
+  // we need an extra panel to keep things grouped properly
+  GLUI_Panel *teapot_trans_panel = glui->add_panel_to_panel(teapot_rollout, "", 
+							    GLUI_PANEL_NONE);
+  teapot_xz_trans = glui->add_translation_to_panel(teapot_trans_panel, 
+						   "Translate XZ", 
+						   GLUI_TRANSLATION_XY, 
+						   live_teapot_xz_trans);
 
-  spin_s->set_float_limits(0.1, 10.0);
+  glui->add_column_to_panel(teapot_trans_panel, false);
+  teapot_y_trans =  glui->add_translation_to_panel(teapot_trans_panel, 
+						   "Translate Y", 
+						   GLUI_TRANSLATION_Y, 
+						   &live_teapot_y_trans);
 
-  glui->add_checkbox("Draw Light Mapped Floor", 
-		     &live_draw_lightmap, 
-		     CB_TOGGLE_LIGHTMAP, 
-		     glui_cb);
+  teapot_xz_trans->scale_factor = 0.1f;
+  teapot_y_trans->scale_factor = 0.1f;
+
+  glui->add_button_to_panel(teapot_rollout, "Reset Teapot",
+			    CB_TEAPOT_RESET, glui_cb);
+
+  // empty space
+  glui->add_statictext("");
+
+  triangle_rollout = glui->add_rollout("Triangle Translate");
+  // rotation and translation controls
+  // we need an extra panel to keep things grouped properly
+  GLUI_Panel *triangle_trans_panel = glui->add_panel_to_panel(triangle_rollout, "", 
+							      GLUI_PANEL_NONE);
+  triangle_xz_trans = glui->add_translation_to_panel(triangle_trans_panel, 
+						   "Translate XZ", 
+						   GLUI_TRANSLATION_XY, 
+						   live_triangle_xz_trans);
+
+  glui->add_column_to_panel(triangle_trans_panel, false);
+  triangle_y_trans =  glui->add_translation_to_panel(triangle_trans_panel, 
+						   "Translate Y", 
+						   GLUI_TRANSLATION_Y, 
+						   &live_triangle_y_trans);
+
+  triangle_xz_trans->scale_factor = 0.1f;
+  triangle_y_trans->scale_factor = 0.1f;
+
+  glui->add_button_to_panel(triangle_rollout, "Reset Triangle",
+			    CB_TRIANGLE_RESET, glui_cb);
+
+
+
+
+  // empty space
+  glui->add_statictext("");
 
   glui->set_main_gfx_window(main_window);
 }
@@ -251,8 +287,6 @@ float length(float v[3])
 {
   return (float)sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
-
-
 
 
 // catch mouse up/down events
@@ -408,6 +442,9 @@ void initGeometry()
   lookat[0] = 0;
   lookat[1] = 0;
   lookat[2] = 0;
+  
+  live_light_intensity = 1.0;
+
 
   Vector up(0.0, 1.0, 0.0);
   scene.SetUp(up);
@@ -416,45 +453,37 @@ void initGeometry()
   Color ambLight(0.2, 0.2, 0.2, 1.0);
   scene.SetAmbient(ambLight);
   
-  live_face_alpha = 0;
-
   earthTex = new BaseTex("../tex/eoe4.rgb", GL_MODULATE, false);
-  faceTex = new MultiTex("../tex/mdudley.rgb", live_face_alpha, false);
-  lightTex = new MultiTex("../tex/lightmap.rgb", 0.5, false);
   BaseTex* checkerTex = new BaseTex("../tex/checkerboard.rgb", GL_MODULATE, true);
 
-  Vector light_pos(5.0, 5.0, 5.0);
+  Vector light_pos(8.0, 5.0, 5.0);
   Color light_color = SOLID_WHITE;
-  Light l(light_pos, light_color, GL_LIGHT0);
+  l = new Light(light_pos, light_color, GL_LIGHT0);
   scene.AddLight(l);
-  
-  Sphere* light_model = new Sphere();
-  light_model->Generate(light_pos, 0.1, 5);
-  scene.AddGeometry(light_model);
 
-   Vector cent(0.0, 0.0, 0.0);
-  // earth = new Sphere();
-  // // earth->PushTex(earthTex);
-  // // earth->PushTex(faceTex);
-  // // earth->PushTex(lightTex);
-  // earth->Generate(cent, 3.0, 5);
-  // scene.AddGeometry(earth);
+  Vector cent(0.0, 0.0, 0.0);
+  earth = new Sphere();
+  earth->PushTex(earthTex);
+  earth->Generate(cent, 1.0, 5);
+  earth->SetTranslate(Vector(6.0, 0.0, -4.0));
+  scene.AddGeometry(earth);
 
-  // box = new Box(cent, 2, 2, 2);
-  // box->SetColor(SOLID_DARK_RED);
-  // scene.AddGeometry(box);
+  teapot = new Asset("../assets/teapot.obj");
+  teapot->SetTranslate(Vector(0.0, -2.0, 0.0));
+  scene.AddGeometry(teapot);
   
-  // teapot = new Asset("../assets/teapot.obj");
-  // teapot->SetTranslate(Vector(0.0, -8.0, 0.0));
-  // scene.AddGeometry(teapot);
-  
-  Vector tri1(0.0, 0.0, 0.0);
-  Vector tri2(0.0, 2.0, 0.0);
-  Vector tri3(2.0, 0.0, 0.0);
+  Vector box_center(0.0, -3.0, 0.0);
+  box = new Box(box_center, 2, 2, 2);
+  box->SetColor(SOLID_DARK_RED);
+  scene.AddGeometry(box);
+
+  Vector tri1(0.0, 4.0, 0.0);
+  Vector tri2(0.0, 5.0, 0.0);
+  Vector tri3(2.0, 4.0, 0.0);
   Vector tnorm(0.0, 0.0, 1.0);
-  Triangle* t = new Triangle(tri1, tri2, tri3, SOLID_RED);
-  t->SetNormals(tnorm, tnorm, tnorm);
-  scene.AddOccluder(t);
+  triangle = new Triangle(tri1, tri2, tri3, SOLID_RED);
+  triangle->SetNormals(tnorm, tnorm, tnorm);
+  scene.AddOccluder(triangle);
 
   Vector fpt1(-10.0, -4.0, -10.0);
   Vector fpt2(-10.0, -4.0,  10.0);
@@ -470,7 +499,7 @@ void initGeometry()
   floor->SetNormals(fnorm, fnorm, fnorm, fnorm);
   floor->PushTex(checkerTex);
   floor->PushTexCoords(ftex1, ftex2, ftex3, ftex4);
-  scene.AddGeometry(floor); 
+  scene.AddReceiver(floor); 
 
   Color lightblue(0.75, 0.75, 1.0, 1.0);
 
@@ -482,7 +511,7 @@ void initGeometry()
   Quad* lwall = new Quad(lwallpt1, lwallpt2, lwallpt3, lwallpt4, lightblue);
   lwallnorm.normalize();
   lwall->SetNormals(lwallnorm, lwallnorm, lwallnorm, lwallnorm);
-  scene.AddGeometry(lwall);
+  scene.AddReceiver(lwall);
 
   Vector rwallpt1(10.0, -4.0, -10.0);
   Vector rwallpt2(10.0, 10.0, -10.0);
@@ -492,7 +521,7 @@ void initGeometry()
   Quad* rwall = new Quad(rwallpt4, rwallpt3, rwallpt2, rwallpt1, lightblue);
   rwallnorm.normalize();
   rwall->SetNormals(rwallnorm, rwallnorm, rwallnorm, rwallnorm);
-  scene.AddGeometry(rwall);
+  scene.AddReceiver(rwall);
   
   Vector bwallpt1(-10.0, -4.0, -10.0);
   Vector bwallpt2(-10.0, 10.0, -10.0);
@@ -502,9 +531,9 @@ void initGeometry()
   Quad* bwall = new Quad(bwallpt1, bwallpt2, bwallpt3, bwallpt4, lightblue);
   bwallnorm.normalize();
   bwall->SetNormals(bwallnorm, bwallnorm, bwallnorm, bwallnorm);
-  scene.AddGeometry(bwall);
+  scene.AddReceiver(bwall);
 
-  scene.SetShadowMode(Scene::SHADOW_VOLUMES);
+//  scene.SetShadowMode(Scene::PROJECTIVE_SHADOWS);
 }
 
 void myGlutIdle(void)
@@ -526,6 +555,7 @@ void myGlutReshape(int	x, int y)
 
   glutPostRedisplay();
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -549,10 +579,9 @@ int main(int argc, char* argv[])
   // Create the objects for our scene
   initGeometry();
 
+
   // Off we go
   glutMainLoop();
-
+  
   return 0;
 }
-
-

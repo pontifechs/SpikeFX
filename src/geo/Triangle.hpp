@@ -32,6 +32,7 @@ public:
   Vector pt3() const;
 
   virtual void Draw(TexStack* override=0) const;
+  virtual Geo* GetTransformed(Vector light, Vector origin, Vector normal);
   
   std::vector<Quad> GetShadowVolume(Vector lightPos) const;
 

@@ -3,8 +3,9 @@
 #define __GUARD_GEO_HPP__
 
 #include "math/Vector.hpp"
+#include "math/Matrix.hpp"
 #include "tex/TexStack.hpp"
-
+//#include "geo/Asset.hpp"
 
 class TexIF;
 
@@ -24,6 +25,8 @@ public:
   
   void SetCenter(Vector center);
   Vector GetCenter() const;
+
+  virtual Geo* GetTransformed(Vector light, Vector origin, Vector normal) = 0;
 
 protected:
   Vector m_trans;

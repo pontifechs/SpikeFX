@@ -33,6 +33,7 @@ public:
   Color GetColor(Face face) const;
 
   virtual void Draw(TexStack* override) const;
+  virtual Geo* GetTransformed(Vector light, Vector origin, Vector normal);
 
 protected:
 private:

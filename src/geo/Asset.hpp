@@ -11,15 +11,19 @@
 class Asset : public Geo
 {
 public:
+  Asset();
   Asset(std::string filename);
 
+  void AddGeo(Geo* geo);
+
   virtual void Draw(TexStack* override=0) const;
+  virtual Geo* GetTransformed(Vector light, Vector origin, Vector normal);
 
 protected:
 
 
 private:
-  std::vector<Triangle> m_geometry;
+  std::vector<Geo*> m_geometry;
   
   
 

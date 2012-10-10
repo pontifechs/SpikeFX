@@ -183,3 +183,30 @@ std::vector<Quad> Triangle::GetShadowVolume(Vector lightPos) const
 
   return ret;
 }
+
+Geo* Triangle::GetTransformed(Vector light, Vector origin, Vector normal) 
+{
+  // 3 plane intersections 
+  Triangle* ret =  NULL;
+
+  Vector e = light;
+  Vector d1 = (m_pt1 + m_trans) - light;
+  Vector d2 = (m_pt2 + m_trans) - light;
+  Vector d3 = (m_pt3 + m_trans) - light;
+
+  float t1 = (origin - e).dot(normal) / (d1.dot(normal));
+  float t2 = (origin - e).dot(normal) / (d2.dot(normal));
+  float t3 = (origin - e).dot(normal) / (d3.dot(normal));
+
+  // Shadow doesn't project onto this polygon.
+  if (t1 < 0 || t2 < 0 || t3 < 0)
+  {
+    return ret;
+  }
+  
+  Vector newPt1 = (d1 * (t1 * 0.99)) + e;
+  Vector newPt2 = (d2 * (t2 * 0.99)) + e;
+  Vector newPt3 = (d3 * (t3 * 0.99)) + e;
+  ret = new Triangle(newPt1, newPt2, newPt3);
+  return ret;
+}

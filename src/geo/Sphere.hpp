@@ -22,7 +22,8 @@ public:
   void Generate(Vector center, float radius, float angle_increment = 5);
 
   virtual void Draw(TexStack* override=0) const;
-
+  virtual Geo* GetTransformed(Vector light, Vector origin, Vector normal);
+  
   // std::vector<Triangle> getTris(); 
 
 protected:

@@ -184,6 +184,7 @@ Matrix& Matrix::operator*= (const Matrix& rhs)
   }
   return *this;
 }  
+
 // + Operator overload
 Matrix Matrix::operator+ (const Matrix& rhs) const
 {
@@ -191,6 +192,7 @@ Matrix Matrix::operator+ (const Matrix& rhs) const
   result += rhs;
   return result;
 }
+
 // - Operator overload
 Matrix Matrix::operator- (const Matrix& rhs) const
 {
@@ -198,12 +200,42 @@ Matrix Matrix::operator- (const Matrix& rhs) const
   result -= rhs;
   return result;
 }
+
 // * Operator overload
 Matrix Matrix::operator* (const Matrix& rhs) const
 {
   Matrix result = *this;
   result *= rhs;
   return result;
+}
+
+Vector Matrix::operator* (const Vector& rhs) const
+{
+  float x = 
+    (m_pData[0] * rhs.x()) + 
+    (m_pData[1] * rhs.y()) + 
+    (m_pData[2] * rhs.z()) + 
+    (m_pData[3] * rhs.w());
+
+  float y = 
+    (m_pData[4] * rhs.x()) + 
+    (m_pData[5] * rhs.y()) + 
+    (m_pData[6] * rhs.z()) + 
+    (m_pData[7] * rhs.w());
+
+  float z = 
+    (m_pData[8] * rhs.x()) + 
+    (m_pData[9] * rhs.y()) + 
+    (m_pData[10] * rhs.z()) + 
+    (m_pData[11] * rhs.w());
+
+  float w = 
+    (m_pData[12] * rhs.x()) + 
+    (m_pData[13] * rhs.y()) + 
+    (m_pData[14] * rhs.z()) + 
+    (m_pData[15] * rhs.w());
+
+  return Vector(x, y, z, w);
 }
 
 bool Matrix::operator== (const Matrix& rhs) const

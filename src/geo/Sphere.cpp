@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include "geo/Sphere.hpp"
-
+#include "geo/Asset.hpp"
 
 
 Sphere::~Sphere() 
@@ -147,3 +147,22 @@ void Sphere::Draw(TexStack* override) const
 // {
 //   return tris;
 // }
+
+Geo* Sphere::GetTransformed(Vector light, Vector origin, Vector normal)
+{
+  Asset* ret = new Asset();
+  for (int i = 0; i < tris.size(); i++)
+  {
+    Triangle t = tris[i];
+    t.SetTranslate(m_trans);
+    Geo* t_proj = t.GetTransformed(light, origin, normal);
+    t.SetTranslate(Vector(0.0, 0.0, 0.0));
+    if (t_proj != NULL)
+    {
+      ret->AddGeo(t_proj);
+    }
+    
+  }
+
+  return ret;
+}
